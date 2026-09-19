@@ -28,17 +28,17 @@
             <p class="text-blue-100 text-xs">Jadwalkan penjemputan pakaian Anda sekarang juga.</p>
         </div>
 
-        <!-- Real-time Order Tracking Visual (Progress Bar) -->
+        <!-- Real-time Order Tracking Visual (Progress Bar Dinamis) -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-6">
             <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Status Pesanan Aktif</h2>
             <div class="flex justify-between text-xs font-semibold mb-2">
-                <span class="text-blue-400">Penjemputan</span>
-                <span class="text-slate-400">Proses Cuci</span>
-                <span class="text-slate-400">Selesai</span>
+                <span id="labelStep1" class="text-blue-400">Penjemputan</span>
+                <span id="labelStep2" class="text-slate-400">Proses Cuci</span>
+                <span id="labelStep3" class="text-slate-400">Selesai</span>
             </div>
-            <!-- Progress Bar -->
+            <!-- Progress Bar dengan ID agar bisa diatur lebarnya via JS -->
             <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div class="bg-blue-500 h-full w-1/3 rounded-full"></div>
+                <div id="progressBarFill" class="bg-blue-500 h-full w-1/3 rounded-full transition-all duration-500"></div>
             </div>
             <p id="statusText" class="text-[11px] text-slate-400 mt-2">Belum ada pesanan aktif.</p>
         </div>
@@ -89,10 +89,10 @@
         </div>
     </main>
 
-    <!-- SCRIPT UTAMA & AUTO-SYNC STATUS -->
+    <!-- SCRIPT UTAMA & AUTO-SYNC PROGRESS BAR -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            // Cek Status Login User di Navbar
+            // Cek Login User
             let currentUser = JSON.parse(localStorage.getItem('laundry_current_user'));
             if (currentUser && currentUser.name) {
                 let btnAccount = document.getElementById('navAccountBtn');
@@ -102,16 +102,25 @@
                 }
             }
 
-            // Ambil Status Pesanan Terbaru yang di-update oleh Admin
+            // Ambil Status Pesanan & Sinkronisasi Progress Bar
             let savedOrder = JSON.parse(localStorage.getItem('laundry_active_order'));
             let statusText = document.getElementById('statusText');
-            
+            let progressBar = document.getElementById('progressBarFill');
+
             if (savedOrder && statusText) {
                 statusText.innerText = "Status: " + savedOrder.status + " | Bayar via: " + savedOrder.payment;
+
+                // Logika Pergerakan Progress Bar Berdasarkan Status Admin
+                if (savedOrder.status === 'Penjemputan Kurir') {
+                    progressBar.style.width = '33%';
+                } else if (savedOrder.status === 'Proses Dicuci' || savedOrder.status === 'Proses Disetrika') {
+                    progressBar.style.width = '66%';
+                } else if (savedOrder.status === 'Selesai / Dikirim') {
+                    progressBar.style.width = '100%';
+                }
             }
         });
 
-        // Fungsi Kirim Pesanan Baru
         function submitOrder(e) {
             e.preventDefault();
             let service = document.getElementById('serviceType').value;
@@ -128,12 +137,11 @@
             };
             
             localStorage.setItem('laundry_active_order', JSON.stringify(orderData));
-            
             alert('Pesanan berhasil dibuat! Pembayaran via ' + payment);
             location.reload();
         }
 
-        // Sinkronisasi Real-time: Otomatis perbarui halaman jika admin mengubah status
+        // Auto-Sync saat admin mengubah status di tab/halaman lain
         window.addEventListener('storage', (e) => {
             if (e.key === 'laundry_active_order') {
                 location.reload(); 
