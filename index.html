@@ -89,9 +89,10 @@
         </div>
     </main>
 
-    <!-- SCRIPT UTAMA -->
+    <!-- SCRIPT UTAMA & AUTO-SYNC STATUS -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
+            // Cek Status Login User di Navbar
             let currentUser = JSON.parse(localStorage.getItem('laundry_current_user'));
             if (currentUser && currentUser.name) {
                 let btnAccount = document.getElementById('navAccountBtn');
@@ -101,13 +102,16 @@
                 }
             }
 
+            // Ambil Status Pesanan Terbaru yang di-update oleh Admin
             let savedOrder = JSON.parse(localStorage.getItem('laundry_active_order'));
             let statusText = document.getElementById('statusText');
+            
             if (savedOrder && statusText) {
                 statusText.innerText = "Status: " + savedOrder.status + " | Bayar via: " + savedOrder.payment;
             }
         });
 
+        // Fungsi Kirim Pesanan Baru
         function submitOrder(e) {
             e.preventDefault();
             let service = document.getElementById('serviceType').value;
@@ -115,12 +119,26 @@
             let slot = document.getElementById('pickupSlot').value;
             let payment = document.getElementById('paymentMethod').value;
 
-            let orderData = { service, date, slot, payment, status: 'Penjemputan Kurir' };
+            let orderData = { 
+                service, 
+                date, 
+                slot, 
+                payment, 
+                status: 'Penjemputan Kurir' 
+            };
+            
             localStorage.setItem('laundry_active_order', JSON.stringify(orderData));
             
             alert('Pesanan berhasil dibuat! Pembayaran via ' + payment);
             location.reload();
         }
+
+        // Sinkronisasi Real-time: Otomatis perbarui halaman jika admin mengubah status
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'laundry_active_order') {
+                location.reload(); 
+            }
+        });
     </script>
 </body>
 </html>
