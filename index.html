@@ -36,7 +36,7 @@
                 <span id="labelStep2" class="text-slate-400">Proses Cuci</span>
                 <span id="labelStep3" class="text-slate-400">Selesai</span>
             </div>
-            <!-- Progress Bar dengan ID agar bisa diatur lebarnya via JS -->
+            <!-- Progress Bar dengan ID -->
             <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
                 <div id="progressBarFill" class="bg-blue-500 h-full w-1/3 rounded-full transition-all duration-500"></div>
             </div>
@@ -89,10 +89,43 @@
         </div>
     </main>
 
-    <!-- SCRIPT UTAMA & AUTO-SYNC PROGRESS BAR -->
+    <!-- SCRIPT UTAMA DENGAN REAL-TIME POLLING SYNC -->
     <script>
+        // Fungsi untuk memperbarui tampilan status & progress bar
+        function checkAndUpdateStatus() {
+            let savedOrder = JSON.parse(localStorage.getItem('laundry_active_order'));
+            let statusText = document.getElementById('statusText');
+            let progressBar = document.getElementById('progressBarFill');
+
+            if (savedOrder && statusText && progressBar) {
+                statusText.innerText = "Status: " + savedOrder.status + " | Bayar via: " + savedOrder.payment;
+
+                // Logika Pergerakan Progress Bar & Warna Label
+                let lbl1 = document.getElementById('labelStep1');
+                let lbl2 = document.getElementById('labelStep2');
+                let lbl3 = document.getElementById('labelStep3');
+
+                if (savedOrder.status === 'Penjemputan Kurir') {
+                    progressBar.style.width = '33%';
+                    lbl1.className = "text-blue-400 font-bold";
+                    lbl2.className = "text-slate-400";
+                    lbl3.className = "text-slate-400";
+                } else if (savedOrder.status === 'Proses Dicuci' || savedOrder.status === 'Proses Disetrika') {
+                    progressBar.style.width = '66%';
+                    lbl1.className = "text-slate-400";
+                    lbl2.className = "text-blue-400 font-bold";
+                    lbl3.className = "text-slate-400";
+                } else if (savedOrder.status === 'Selesai / Dikirim') {
+                    progressBar.style.width = '100%';
+                    lbl1.className = "text-slate-400";
+                    lbl2.className = "text-slate-400";
+                    lbl3.className = "text-emerald-400 font-bold";
+                }
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
-            // Cek Login User
+            // Cek Login User di Navbar
             let currentUser = JSON.parse(localStorage.getItem('laundry_current_user'));
             if (currentUser && currentUser.name) {
                 let btnAccount = document.getElementById('navAccountBtn');
@@ -102,23 +135,11 @@
                 }
             }
 
-            // Ambil Status Pesanan & Sinkronisasi Progress Bar
-            let savedOrder = JSON.parse(localStorage.getItem('laundry_active_order'));
-            let statusText = document.getElementById('statusText');
-            let progressBar = document.getElementById('progressBarFill');
+            // Jalankan pengecekan status pertama kali saat halaman dibuka
+            checkAndUpdateStatus();
 
-            if (savedOrder && statusText) {
-                statusText.innerText = "Status: " + savedOrder.status + " | Bayar via: " + savedOrder.payment;
-
-                // Logika Pergerakan Progress Bar Berdasarkan Status Admin
-                if (savedOrder.status === 'Penjemputan Kurir') {
-                    progressBar.style.width = '33%';
-                } else if (savedOrder.status === 'Proses Dicuci' || savedOrder.status === 'Proses Disetrika') {
-                    progressBar.style.width = '66%';
-                } else if (savedOrder.status === 'Selesai / Dikirim') {
-                    progressBar.style.width = '100%';
-                }
-            }
+            // SINKRONISASI REAL-TIME: Cek perubahan data setiap 1 detik secara otomatis tanpa perlu refresh
+            setInterval(checkAndUpdateStatus, 1000);
         });
 
         function submitOrder(e) {
@@ -140,13 +161,6 @@
             alert('Pesanan berhasil dibuat! Pembayaran via ' + payment);
             location.reload();
         }
-
-        // Auto-Sync saat admin mengubah status di tab/halaman lain
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'laundry_active_order') {
-                location.reload(); 
-            }
-        });
     </script>
 </body>
 </html>
