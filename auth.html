@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk / Daftar - CleanLaundry</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased flex flex-col min-h-screen justify-between p-4">
+
+    <!-- HEADER -->
+    <div class="max-w-md w-mx mx-auto text-center pt-8">
+        <span class="text-xl font-black text-blue-400">CLEAN<span class="text-white">LAUNDRY</span></span>
+        <p class="text-slate-400 text-xs mt-1">Sistem Pemesanan & Riwayat Laundry Digital</p>
+    </div>
+
+    <!-- KONTROL TAB (LOGIN / REGISTER) -->
+    <main class="max-w-md w-full mx-auto my-auto space-y-6">
+        <div class="flex bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
+            <button onclick="switchTab('login')" id="tabLogin" class="flex-1 py-2.5 text-xs font-bold rounded-xl bg-blue-600 text-white transition">Masuk</button>
+            <button onclick="switchTab('register')" id="tabRegister" class="flex-1 py-2.5 text-xs font-bold rounded-xl text-slate-400 transition">Daftar Akun</button>
+        </div>
+
+        <!-- FORM LOGIN -->
+        <div id="formLoginContainer" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+            <h2 class="font-bold text-sm text-white">Masuk ke Akun Anda</h2>
+            <form onsubmit="handleLogin(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Nomor WhatsApp / Email</label>
+                    <input type="text" id="loginEmail" placeholder="08123456789" required class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Kata Sandi</label>
+                    <input type="password" id="loginPass" placeholder="••••••••" required class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:border-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs transition">
+                    Masuk Sekarang
+                </button>
+            </form>
+        </div>
+
+        <!-- FORM REGISTER -->
+        <div id="formRegisterContainer" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 hidden">
+            <h2 class="font-bold text-sm text-white">Daftar Akun Baru</h2>
+            <form onsubmit="handleRegister(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Nama Lengkap</label>
+                    <input type="text" id="regName" placeholder="Nama Anda" required class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Nomor WhatsApp</label>
+                    <input type="text" id="regPhone" placeholder="08123456789" required class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Buat Kata Sandi</label>
+                    <input type="password" id="regPass" placeholder="••••••••" required class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:border-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs transition">
+                    Daftar & Masuk
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- FOOTER NAV KEMBALI -->
+    <div class="max-w-md w-full mx-auto text-center pb-4">
+        <a href="index.html" class="text-xs text-slate-500 hover:text-slate-300">← Kembali ke Halaman Utama</a>
+    </div>
+
+    <!-- SCRIPT LOGIKA AUTENTIKASI -->
+    <script>
+        function switchTab(tab) {
+            const loginBtn = document.getElementById('tabLogin');
+            const regBtn = document.getElementById('tabRegister');
+            const loginDiv = document.getElementById('formLoginContainer');
+            const regDiv = document.getElementById('formRegisterContainer');
+
+            if (tab === 'login') {
+                loginBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-xl bg-blue-600 text-white transition";
+                regBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-xl text-slate-400 transition";
+                loginDiv.classList.remove('hidden');
+                regDiv.classList.add('hidden');
+            } else {
+                regBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-xl bg-emerald-600 text-white transition";
+                loginBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-xl text-slate-400 transition";
+                regDiv.classList.remove('hidden');
+                loginDiv.classList.add('hidden');
+            }
+        }
+
+        // Proses Pendaftaran Akun Baru
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const phone = document.getElementById('regPhone').value;
+            const pass = document.getElementById('regPass').value;
+
+            let userData = { name, phone, pass };
+            localStorage.setItem('laundry_current_user', JSON.stringify(userData));
+            
+            alert('Pendaftaran berhasil! Selamat datang, ' + name);
+            window.location.href = 'index.html';
+        }
+
+        // Proses Masuk Akun
+        function handleLogin(e) {
+            e.preventDefault();
+            const phone = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+
+            let savedUser = JSON.parse(localStorage.getItem('laundry_current_user'));
+
+            if (!savedUser) {
+                alert('Belum ada akun terdaftar. Silakan daftar terlebih dahulu!');
+                switchTab('register');
+                return;
+            }
+
+            if (savedUser.phone === phone && savedUser.pass === pass) {
+                alert('Login berhasil! Selamat datang kembali, ' + savedUser.name);
+                window.location.href = 'index.html';
+            } else {
+                alert('Nomor atau kata sandi salah!');
+            }
+        }
+    </script>
+</body>
+</html>
