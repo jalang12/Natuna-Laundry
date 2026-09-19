@@ -44,7 +44,7 @@
         </div>
     </header>
 
-    <!-- FORM PENJADWALAN & LAYANAN -->
+    <!-- FORM PENJADWALAN & PEMBAYARAN -->
     <main id="order" class="max-w-md mx-auto px-4">
         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
             <h2 class="font-bold text-base text-white">Buat Pesanan Baru</h2>
@@ -73,16 +73,24 @@
                     </select>
                 </div>
 
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Metode Pembayaran</label>
+                    <select id="paymentMethod" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white outline-none">
+                        <option value="COD (Bayar saat pakaian diantar)">COD (Bayar saat pakaian diantar)</option>
+                        <option value="Transfer Bank (BCA / Mandiri)">Transfer Bank (BCA / Mandiri)</option>
+                        <option value="QRIS / E-Wallet (GoPay, DANA, OVO)">QRIS / E-Wallet (GoPay, DANA, OVO)</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition mt-2">
-                    Konfirmasi Pesanan
+                    Konfirmasi Pesanan & Bayar
                 </button>
             </form>
         </div>
     </main>
 
-    <!-- SCRIPT UTAMA & CEK STATUS -->
+    <!-- SCRIPT UTAMA -->
     <script>
-        // Cek Login & Update Status saat halaman dimuat
         window.addEventListener('DOMContentLoaded', () => {
             let currentUser = JSON.parse(localStorage.getItem('laundry_current_user'));
             if (currentUser && currentUser.name) {
@@ -96,7 +104,7 @@
             let savedOrder = JSON.parse(localStorage.getItem('laundry_active_order'));
             let statusText = document.getElementById('statusText');
             if (savedOrder && statusText) {
-                statusText.innerText = "Status saat ini: " + savedOrder.status + " (" + savedOrder.service + ")";
+                statusText.innerText = "Status: " + savedOrder.status + " | Bayar via: " + savedOrder.payment;
             }
         });
 
@@ -105,10 +113,12 @@
             let service = document.getElementById('serviceType').value;
             let date = document.getElementById('pickupDate').value;
             let slot = document.getElementById('pickupSlot').value;
+            let payment = document.getElementById('paymentMethod').value;
 
-            let orderData = { service, date, slot, status: 'Penjemputan Kurir' };
+            let orderData = { service, date, slot, payment, status: 'Penjemputan Kurir' };
             localStorage.setItem('laundry_active_order', JSON.stringify(orderData));
-            alert('Pesanan berhasil dibuat! Kurir akan segera menjemput.');
+            
+            alert('Pesanan berhasil dibuat! Pembayaran via ' + payment);
             location.reload();
         }
     </script>
