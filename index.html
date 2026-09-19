@@ -7,7 +7,7 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased pb-20">
+<body class="bg-slate-950 text-slate-100 font-sans antialiased pb-24">
 
     <!-- NAVBAR MOBILE-FIRST -->
     <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-3">
@@ -16,20 +16,31 @@
             <div class="flex items-center gap-2 text-xs">
                 <a href="#order" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg font-bold">Pesan</a>
                 <a href="auth.html" id="navAccountBtn" class="bg-slate-800 text-slate-300 px-2.5 py-1.5 rounded-lg font-semibold hover:bg-slate-700">Akun / Masuk</a>
-                <a href="admin.html" class="bg-slate-800 text-slate-400 px-2.5 py-1.5 rounded-lg hover:text-white">Admin</a>
+                <a href="admin.html" class="bg-slate-800 text-slate-400 px-2 py-1.5 rounded-lg hover:text-white">Admin</a>
             </div>
         </div>
     </nav>
 
     <!-- HEADER & STATUS TRACKING -->
-    <header class="max-w-md mx-auto px-4 py-6">
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 rounded-2xl shadow-lg mb-6">
+    <header class="max-w-md mx-auto px-4 py-6 space-y-4">
+        <!-- KARTU PROFIL PENGGUNA (MUNCUL JIKA LOGIN) -->
+        <div id="userProfileCard" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-center hidden">
+            <div>
+                <p class="text-[10px] text-slate-400">Selamat datang,</p>
+                <h3 id="profileName" class="text-sm font-bold text-emerald-400">Nama User</h3>
+            </div>
+            <button onclick="logoutUser()" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-[11px] font-bold px-3 py-1.5 rounded-xl transition border border-red-500/30">
+                Keluar
+            </button>
+        </div>
+
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 rounded-2xl shadow-lg">
             <h1 class="text-xl font-black mb-1">Cucian Bersih Tanpa Ribet!</h1>
             <p class="text-blue-100 text-xs">Jadwalkan penjemputan pakaian Anda sekarang juga.</p>
         </div>
 
         <!-- Real-time Order Tracking Visual (Progress Bar Dinamis) -->
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-6">
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
             <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Status Pesanan Aktif</h2>
             <div class="flex justify-between text-xs font-semibold mb-2">
                 <span id="labelStep1" class="text-blue-400">Penjemputan</span>
@@ -44,21 +55,20 @@
         </div>
     </header>
 
-    <!-- KONTROL UTAMA: FORM PEMESANAN ATAU KOTAK PEMBAYARAN AKTIF -->
+    <!-- KONTROL UTAMA: PEMBAYARAN, FORM, & RIWAYAT -->
     <main id="order" class="max-w-md mx-auto px-4 space-y-4">
 
         <!-- KOTAK PEMBAYARAN (MUNCUL JIKA ADA TRANSAKSI BELUM DIBAYAR) -->
         <div id="paymentBox" class="bg-slate-900 border-2 border-amber-500/50 p-5 rounded-2xl space-y-4 hidden">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h2 class="font-bold text-sm text-amber-400">💳 Selesaikan Pembayaran</h2>
-                <span id="payStatusBadge" class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold">Menunggu Bayar</span>
+                <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold">Menunggu Bayar</span>
             </div>
             
             <div class="space-y-2 text-xs text-slate-300">
                 <p>Layanan: <span id="summaryService" class="font-bold text-white"></span></p>
                 <p>Metode: <span id="summaryMethod" class="font-bold text-white"></span></p>
                 
-                <!-- Tampilan Interaktif QRIS / Virtual Account -->
                 <div id="interactivePaymentContent" class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center space-y-3 mt-3">
                     <!-- Diisi dinamis via JS -->
                 </div>
@@ -69,7 +79,7 @@
             </button>
         </div>
 
-        <!-- FORM PENJADWALAN & PEMBAYARAN (FORM UTAMA) -->
+        <!-- FORM PEMESANAN BARU -->
         <div id="orderFormBox" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
             <h2 class="font-bold text-base text-white">Buat Pesanan Baru</h2>
             
@@ -111,9 +121,21 @@
                 </button>
             </form>
         </div>
+
+        <!-- RIWAYAT PESANAN (ORDER HISTORY) -->
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h2 class="font-bold text-sm text-white">📜 Riwayat Pesanan Saya</h2>
+                <button onclick="clearHistory()" class="text-[10px] text-red-400 hover:underline">Hapus Riwayat</button>
+            </div>
+            <div id="historyList" class="space-y-2 text-xs text-slate-300">
+                <p class="text-slate-500 text-center py-2">Belum ada riwayat pesanan.</p>
+            </div>
+        </div>
+
     </main>
 
-    <!-- SCRIPT UTAMA DENGAN GATEWAY PEMBAYARAN INTERAKTIF -->
+    <!-- SCRIPT LENGKAP: PROFIL, PEMBAYARAN, STATUS, & RIWAYAT -->
     <script>
         function checkAndUpdateStatus() {
             let savedOrder = JSON.parse(localStorage.getItem('laundry_active_order'));
@@ -125,10 +147,9 @@
             if (savedOrder && statusText && progressBar) {
                 statusText.innerText = "Status: " + savedOrder.status + " | Pembayaran: " + savedOrder.isPaid;
 
-                // Tampilkan Kotak Pembayaran jika belum lunas
                 if (savedOrder.isPaid === 'Belum Lunas') {
                     paymentBox.classList.remove('hidden');
-                    orderFormBox.classList.add('hidden'); // Sembunyikan form pesanan baru selama ada transaksi menggantung
+                    orderFormBox.classList.add('hidden');
                     
                     document.getElementById('summaryService').innerText = savedOrder.service;
                     document.getElementById('summaryMethod').innerText = savedOrder.payment;
@@ -139,20 +160,18 @@
                             <p class="text-[11px] text-slate-400">Scan QR Code di bawah pakai GoPay, DANA, atau OVO:</p>
                             <div class="bg-white p-3 inline-block rounded-xl">
                                 <div class="w-32 h-32 bg-slate-900 flex items-center justify-center text-white text-[10px] font-mono font-bold rounded">
-                                    [ SIMULASI QRIS ]
+                                    [ QRIS CLEAN LAUNDRY ]
                                 </div>
                             </div>
-                            <p class="text-[10px] text-amber-400">Menunggu konfirmasi pembayaran otomatis...</p>
                         `;
                     } else if (savedOrder.payment.includes('Transfer Bank')) {
                         payContent.innerHTML = `
                             <p class="text-[11px] text-slate-400">Silakan transfer ke nomor Virtual Account BCA:</p>
                             <p class="text-base font-black text-blue-400 tracking-wider">8807-0812-3456-7890</p>
-                            <p class="text-[10px] text-slate-500">Atas Nama: PT Clean Laundry Natuna</p>
                         `;
                     } else {
                         payContent.innerHTML = `
-                            <p class="text-[11px] text-slate-400">Metode COD dipilih. Pembayaran dilakukan tunai saat kurir mengantar pakaian kembali ke rumah Anda.</p>
+                            <p class="text-[11px] text-slate-400">Metode COD dipilih. Bayar tunai saat kurir mengantar.</p>
                         `;
                     }
                 } else {
@@ -180,11 +199,56 @@
                     lbl1.className = "text-slate-400";
                     lbl2.className = "text-slate-400";
                     lbl3.className = "text-emerald-400 font-bold";
+
+                    // Jika status admin sudah Selesai, masukkan otomatis ke Riwayat lalu arsipkan pesanan aktif
+                    moveToHistory(savedOrder);
                 }
+            }
+            renderHistory();
+        }
+
+        // Pindahkan pesanan selesai ke Riwayat
+        function moveToHistory(order) {
+            let history = JSON.parse(localStorage.getItem('laundry_history')) || [];
+            // Cek agar tidak duplikat ganda di riwayat
+            let exists = history.some(h => h.date === order.date && h.service === order.service && h.status === order.status);
+            if (!exists) {
+                history.unshift(order); // Tambahkan ke urutan paling atas
+                localStorage.setItem('laundry_history', JSON.stringify(history));
+            }
+        }
+
+        // Render Riwayat Pesanan ke HTML
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            let history = JSON.parse(localStorage.getItem('laundry_history')) || [];
+
+            if (history.length === 0) {
+                historyList.innerHTML = `<p class="text-slate-500 text-center py-2">Belum ada riwayat pesanan.</p>`;
+                return;
+            }
+
+            historyList.innerHTML = history.map(h => `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                    <div class="flex justify-between font-bold text-white">
+                        <span>${h.service}</span>
+                        <span class="text-emerald-400 text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded-full">${h.status}</span>
+                    </div>
+                    <p class="text-slate-400 text-[11px]">Tanggal: ${h.date} | Sesi: ${h.slot}</p>
+                    <p class="text-slate-500 text-[10px]">Bayar: ${h.payment} (${h.isPaid})</p>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            if (confirm("Hapus semua riwayat pesanan?")) {
+                localStorage.removeItem('laundry_history');
+                renderHistory();
             }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Cek Status Login User di Navbar & Kartu Profil
             let currentUser = JSON.parse(localStorage.getItem('laundry_current_user'));
             if (currentUser && currentUser.name) {
                 let btnAccount = document.getElementById('navAccountBtn');
@@ -192,13 +256,22 @@
                     btnAccount.innerText = "👤 " + currentUser.name.split(' ')[0];
                     btnAccount.className = "bg-emerald-900/50 text-emerald-300 border border-emerald-700/50 px-2.5 py-1.5 rounded-lg font-semibold text-xs";
                 }
+                
+                // Tampilkan Kartu Profil
+                document.getElementById('userProfileCard').classList.remove('hidden');
+                document.getElementById('profileName').innerText = currentUser.name + " (" + currentUser.email + ")";
             }
 
             checkAndUpdateStatus();
             setInterval(checkAndUpdateStatus, 1000);
         });
 
-        // Submit Pesanan Baru (Status Pembayaran Awal: Belum Lunas)
+        function logoutUser() {
+            localStorage.removeItem('laundry_current_user');
+            alert('Berhasil keluar akun.');
+            window.location.href = "auth.html";
+        }
+
         function submitOrder(e) {
             e.preventDefault();
             let service = document.getElementById('serviceType').value;
@@ -206,7 +279,6 @@
             let slot = document.getElementById('pickupSlot').value;
             let payment = document.getElementById('paymentMethod').value;
 
-            // Jika pilih COD, langsung anggap lunas/bayar di tempat nanti. Jika QRIS/Transfer, status awal Belum Lunas.
             let isPaidStatus = (payment.includes('COD')) ? 'Lunas (COD)' : 'Belum Lunas';
 
             let orderData = { 
@@ -219,23 +291,22 @@
             };
             
             localStorage.setItem('laundry_active_order', JSON.stringify(orderData));
-            alert('Pesanan berhasil dibuat! Silakan selesaikan pembayaran.');
+            alert('Pesanan berhasil dibuat!');
             location.reload();
         }
 
-        // Aksi Saat Tombol Konfirmasi Bayar Ditekan oleh Pelanggan
         function completePayment() {
             let savedOrder = JSON.parse(localStorage.getItem('laundry_active_order'));
             if (savedOrder) {
                 savedOrder.isPaid = 'Lunas (Terverifikasi)';
                 localStorage.setItem('laundry_active_order', JSON.stringify(savedOrder));
-                alert('Pembayaran berhasil dikonfirmasi! Pesanan Anda sedang diproses.');
+                alert('Pembayaran berhasil dikonfirmasi!');
                 location.reload();
             }
         }
 
         window.addEventListener('storage', (e) => {
-            if (e.key === 'laundry_active_order') {
+            if (e.key === 'laundry_active_order' || e.key === 'laundry_history') {
                 location.reload(); 
             }
         });
