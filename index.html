@@ -36,7 +36,7 @@
                 <span id="labelStep2" class="text-slate-400">Proses Cuci</span>
                 <span id="labelStep3" class="text-slate-400">Selesai</span>
             </div>
-            <!-- Progress Bar dengan ID -->
+            <!-- Progress Bar -->
             <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
                 <div id="progressBarFill" class="bg-blue-500 h-full w-1/3 rounded-full transition-all duration-500"></div>
             </div>
@@ -44,18 +44,42 @@
         </div>
     </header>
 
-    <!-- FORM PENJADWALAN & PEMBAYARAN -->
-    <main id="order" class="max-w-md mx-auto px-4">
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+    <!-- KONTROL UTAMA: FORM PEMESANAN ATAU KOTAK PEMBAYARAN AKTIF -->
+    <main id="order" class="max-w-md mx-auto px-4 space-y-4">
+
+        <!-- KOTAK PEMBAYARAN (MUNCUL JIKA ADA TRANSAKSI BELUM DIBAYAR) -->
+        <div id="paymentBox" class="bg-slate-900 border-2 border-amber-500/50 p-5 rounded-2xl space-y-4 hidden">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="font-bold text-sm text-amber-400">💳 Selesaikan Pembayaran</h2>
+                <span id="payStatusBadge" class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold">Menunggu Bayar</span>
+            </div>
+            
+            <div class="space-y-2 text-xs text-slate-300">
+                <p>Layanan: <span id="summaryService" class="font-bold text-white"></span></p>
+                <p>Metode: <span id="summaryMethod" class="font-bold text-white"></span></p>
+                
+                <!-- Tampilan Interaktif QRIS / Virtual Account -->
+                <div id="interactivePaymentContent" class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center space-y-3 mt-3">
+                    <!-- Diisi dinamis via JS -->
+                </div>
+            </div>
+
+            <button onclick="completePayment()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg">
+                Konfirmasi & Selesaikan Pembayaran
+            </button>
+        </div>
+
+        <!-- FORM PENJADWALAN & PEMBAYARAN (FORM UTAMA) -->
+        <div id="orderFormBox" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
             <h2 class="font-bold text-base text-white">Buat Pesanan Baru</h2>
             
             <form onsubmit="submitOrder(event)" class="space-y-3">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">Pilih Layanan</label>
                     <select id="serviceType" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white outline-none">
-                        <option value="Cuci Kiloan Reguler - Rp 7.000/kg">Cuci Kiloan Reguler (Rp 7.000/kg)</option>
-                        <option value="Cuci Setrika Kilat - Rp 10.000/kg">Cuci Setrika Kilat (Rp 10.000/kg)</option>
-                        <option value="Cuci Selimut/Bedcover - Rp 20.000">Cuci Selimut / Bedcover (Rp 20.000)</option>
+                        <option value="Cuci Kiloan Reguler (Rp 7.000/kg)">Cuci Kiloan Reguler (Rp 7.000/kg)</option>
+                        <option value="Cuci Setrika Kilat (Rp 10.000/kg)">Cuci Setrika Kilat (Rp 10.000/kg)</option>
+                        <option value="Cuci Selimut/Bedcover (Rp 20.000)">Cuci Selimut / Bedcover (Rp 20.000)</option>
                     </select>
                 </div>
 
@@ -89,18 +113,54 @@
         </div>
     </main>
 
-    <!-- SCRIPT UTAMA DENGAN REAL-TIME POLLING SYNC -->
+    <!-- SCRIPT UTAMA DENGAN GATEWAY PEMBAYARAN INTERAKTIF -->
     <script>
-        // Fungsi untuk memperbarui tampilan status & progress bar
         function checkAndUpdateStatus() {
             let savedOrder = JSON.parse(localStorage.getItem('laundry_active_order'));
             let statusText = document.getElementById('statusText');
             let progressBar = document.getElementById('progressBarFill');
+            let paymentBox = document.getElementById('paymentBox');
+            let orderFormBox = document.getElementById('orderFormBox');
 
             if (savedOrder && statusText && progressBar) {
-                statusText.innerText = "Status: " + savedOrder.status + " | Bayar via: " + savedOrder.payment;
+                statusText.innerText = "Status: " + savedOrder.status + " | Pembayaran: " + savedOrder.isPaid;
 
-                // Logika Pergerakan Progress Bar & Warna Label
+                // Tampilkan Kotak Pembayaran jika belum lunas
+                if (savedOrder.isPaid === 'Belum Lunas') {
+                    paymentBox.classList.remove('hidden');
+                    orderFormBox.classList.add('hidden'); // Sembunyikan form pesanan baru selama ada transaksi menggantung
+                    
+                    document.getElementById('summaryService').innerText = savedOrder.service;
+                    document.getElementById('summaryMethod').innerText = savedOrder.payment;
+
+                    let payContent = document.getElementById('interactivePaymentContent');
+                    if (savedOrder.payment.includes('QRIS')) {
+                        payContent.innerHTML = `
+                            <p class="text-[11px] text-slate-400">Scan QR Code di bawah pakai GoPay, DANA, atau OVO:</p>
+                            <div class="bg-white p-3 inline-block rounded-xl">
+                                <div class="w-32 h-32 bg-slate-900 flex items-center justify-center text-white text-[10px] font-mono font-bold rounded">
+                                    [ SIMULASI QRIS ]
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-amber-400">Menunggu konfirmasi pembayaran otomatis...</p>
+                        `;
+                    } else if (savedOrder.payment.includes('Transfer Bank')) {
+                        payContent.innerHTML = `
+                            <p class="text-[11px] text-slate-400">Silakan transfer ke nomor Virtual Account BCA:</p>
+                            <p class="text-base font-black text-blue-400 tracking-wider">8807-0812-3456-7890</p>
+                            <p class="text-[10px] text-slate-500">Atas Nama: PT Clean Laundry Natuna</p>
+                        `;
+                    } else {
+                        payContent.innerHTML = `
+                            <p class="text-[11px] text-slate-400">Metode COD dipilih. Pembayaran dilakukan tunai saat kurir mengantar pakaian kembali ke rumah Anda.</p>
+                        `;
+                    }
+                } else {
+                    paymentBox.classList.add('hidden');
+                    orderFormBox.classList.remove('hidden');
+                }
+
+                // Logika Progress Bar
                 let lbl1 = document.getElementById('labelStep1');
                 let lbl2 = document.getElementById('labelStep2');
                 let lbl3 = document.getElementById('labelStep3');
@@ -125,7 +185,6 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // Cek Login User di Navbar
             let currentUser = JSON.parse(localStorage.getItem('laundry_current_user'));
             if (currentUser && currentUser.name) {
                 let btnAccount = document.getElementById('navAccountBtn');
@@ -135,13 +194,11 @@
                 }
             }
 
-            // Jalankan pengecekan status pertama kali saat halaman dibuka
             checkAndUpdateStatus();
-
-            // SINKRONISASI REAL-TIME: Cek perubahan data setiap 1 detik secara otomatis tanpa perlu refresh
             setInterval(checkAndUpdateStatus, 1000);
         });
 
+        // Submit Pesanan Baru (Status Pembayaran Awal: Belum Lunas)
         function submitOrder(e) {
             e.preventDefault();
             let service = document.getElementById('serviceType').value;
@@ -149,18 +206,39 @@
             let slot = document.getElementById('pickupSlot').value;
             let payment = document.getElementById('paymentMethod').value;
 
+            // Jika pilih COD, langsung anggap lunas/bayar di tempat nanti. Jika QRIS/Transfer, status awal Belum Lunas.
+            let isPaidStatus = (payment.includes('COD')) ? 'Lunas (COD)' : 'Belum Lunas';
+
             let orderData = { 
                 service, 
                 date, 
                 slot, 
                 payment, 
+                isPaid: isPaidStatus,
                 status: 'Penjemputan Kurir' 
             };
             
             localStorage.setItem('laundry_active_order', JSON.stringify(orderData));
-            alert('Pesanan berhasil dibuat! Pembayaran via ' + payment);
+            alert('Pesanan berhasil dibuat! Silakan selesaikan pembayaran.');
             location.reload();
         }
+
+        // Aksi Saat Tombol Konfirmasi Bayar Ditekan oleh Pelanggan
+        function completePayment() {
+            let savedOrder = JSON.parse(localStorage.getItem('laundry_active_order'));
+            if (savedOrder) {
+                savedOrder.isPaid = 'Lunas (Terverifikasi)';
+                localStorage.setItem('laundry_active_order', JSON.stringify(savedOrder));
+                alert('Pembayaran berhasil dikonfirmasi! Pesanan Anda sedang diproses.');
+                location.reload();
+            }
+        }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'laundry_active_order') {
+                location.reload(); 
+            }
+        });
     </script>
 </body>
 </html>
